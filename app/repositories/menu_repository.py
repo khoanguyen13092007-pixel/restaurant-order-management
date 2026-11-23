@@ -30,3 +30,4 @@ class MenuItemRepository(BaseRepository):  # NV2
         return get_db().execute(
             'SELECT COUNT(*) FROM "ORDER_ITEM" WHERE menu_item_id = ?', (menu_item_id,)
         ).fetchone()[0] > 0
+        
