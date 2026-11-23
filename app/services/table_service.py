@@ -1,4 +1,4 @@
-"""NV2 - Table business logic: status, assign, move, merge tables (FR-03, FR-04)."""
+""NV2 - Table business logic: status, assign, move, merge tables (FR-03, FR-04)."""
 from app.repositories.order_repository import OrderRepository
 from app.repositories.table_repository import OrderTableRepository, RestaurantTableRepository
 from app.services import pricing
