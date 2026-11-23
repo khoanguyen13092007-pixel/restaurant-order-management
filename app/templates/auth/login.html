@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Staff login{% endblock %}
+{% block flashes %}{% endblock %}
+{% block content %}
+<section class="panel login">
+  <h2>Staff login</h2>
+  <form method="post" action="{{ url_for('auth.login') }}">
+    {{ csrf_field() }}
+    <label>Username
+      <input type="text" name="username" value="{{ username }}" placeholder="Enter username" autocomplete="username" autofocus required>
+    </label>
+    <label>Password
+      <input type="password" name="password" placeholder="Enter password" autocomplete="current-password" required>
+    </label>
+    {% for category, message in get_flashed_messages(with_categories=true) %}
+      <p class="error-text">{{ message }}</p>
+    {% endfor %}
+    <button type="submit" class="primary wide">Log in</button>
+  </form>
+  <p class="hint">Customers do not need to log in.</p>
+  <a class="btn wide" href="{{ url_for('customer.order_page') }}">View menu as a customer</a>
+</section>
+{% endblock %}

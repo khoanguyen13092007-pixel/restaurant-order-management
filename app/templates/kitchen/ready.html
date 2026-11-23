@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Ready to serve{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
+{% block content %}
+<section class="panel flat">
+  <h2>Ready to serve</h2>
+  <table class="grid-table">
+    <thead><tr><th>Table</th><th>Order</th><th>Item</th><th class="num">Qty</th><th></th></tr></thead>
+    <tbody>
+    {% for i in items %}
+      <tr>
+        <td><strong>{{ i.table_codes or '-' }}</strong></td><td>#{{ i.order_id }}</td>
+        <td>{{ i.item_name }}</td><td class="num">{{ i.quantity }}</td>
+        <td>
+          <form method="post" action="{{ url_for('kitchen.served', item_id=i.order_item_id) }}" class="inline">
+            {{ csrf_field() }}<button type="submit" class="primary small">Served</button>
+          </form>
+        </td>
+      </tr>
+    {% else %}<tr><td colspan="5" class="muted">Nothing is waiting to be served.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}

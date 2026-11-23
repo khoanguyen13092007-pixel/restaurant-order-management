@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Menu &amp; Orders{% endblock %}
+{% block content %}
+<div class="two-col wide-left">
+  <section class="panel flat">
+    <div class="searchbar">
+      <input type="text" id="search" placeholder="Search dish by name...">
+      <button type="button" class="primary" id="search-btn">Search</button>
+    </div>
+    <div class="chips" id="chips">
+      <button type="button" class="chip on" data-cat="">All</button>
+      {% for c in categories %}<button type="button" class="chip" data-cat="{{ c.category_id }}">{{ c.name }}</button>{% endfor %}
+    </div>
+    <table class="grid-table">
+      <thead><tr><th>Dish</th><th class="num">Price</th><th></th></tr></thead>
+      <tbody>
+      {% for i in items %}
+        <tr class="dish" data-id="{{ i.menu_item_id }}" data-name="{{ i.name }}" data-price="{{ i.price|int }}"
+            data-cat="{{ i.category_id }}" data-search="{{ (i.name ~ ' ' ~ (i.description or ''))|norm }}">
+          <td>{{ i.name }}{% if not i.is_available %} (sold out){% endif %}</td>
+          <td class="num">{{ i.price|money }}</td>
+          <td class="num">{% if i.is_available %}<button type="button" class="linkbtn add">[Add]</button>{% else %}&mdash;{% endif %}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <p class="muted nomatch" id="nomatch" hidden>No dish matches your search.</p>
+  </section>
+
+  <form class="panel" id="order-form" method="post" action="{{ action }}">
+    {{ csrf_field() }}
+    <input type="hidden" name="request_token" value="{{ request_token }}">
+    <h2>Current order</h2>
+    <label class="inline-label">Table
+      <select name="table_code" required>
+        <option value="">Select table</option>
+        {% for t in tables %}<option value="{{ t.code }}" {{ 'selected' if t.code == selected_code }}>{{ t.code }}{% if t.status == 'occupied' %} (occupied){% endif %}</option>{% endfor %}
+      </select>
+    </label>
+    <table class="grid-table cart">
+      <thead><tr><th>Item</th><th>Qty</th><th class="num">Price</th><th></th></tr></thead>
+      <tbody id="cart-body"></tbody>
+    </table>
+    <label>Note (optional)
+      <input type="text" name="note" maxlength="200" placeholder="e.g. no onion">
+    </label>
+    <p class="subtotal">Subtotal: <strong id="subtotal">0 VND</strong></p>
+    <div id="cart-fields"></div>
+    <button type="submit" class="primary wide" id="submit-order" disabled>Confirm order &amp; send to kitchen</button>
+    <button type="button" class="wide" id="clear-cart">Cancel</button>
+    {% if mode == 'customer' %}
+      <p class="hint">Your order will be confirmed by the waitstaff before it goes to the kitchen.</p>
+    {% endif %}
+  </form>
+</div>
+<script src="{{ url_for('static', filename='js/order.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Restaurant Order Management System{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  {% set ep = request.endpoint or '' %}
+  <header class="topbar">
+    <span class="brand">Restaurant Order Management System</span>
+    <span class="who">
+      {% if session.get('user_id') %}
+        Logged in: {{ session.role }} |
+        <form method="post" action="{{ url_for('auth.logout') }}" class="logout">
+          {{ csrf_field() }}<button type="submit" class="linkbtn">Log out</button>
+        </form>
+      {% elif ep.startswith('customer.') %}Customer{% endif %}
+    </span>
+  </header>
+  {% if session.get('user_id') %}
+  <nav class="subnav">
+    {% set role = session.role %}
+    {% if role == 'Waitstaff' %}
+      <a class="{{ 'on' if ep in ('orders.new',) }}" href="{{ url_for('orders.new') }}">Menu &amp; Orders</a>
+      <a class="{{ 'on' if ep.startswith('tables.') }}" href="{{ url_for('tables.screen') }}">Tables &amp; Orders</a>
+    {% elif role == 'Kitchen' %}
+      <a class="on" href="{{ url_for('kitchen.board') }}">Kitchen</a>
+    {% elif role == 'Cashier' %}
+      <a class="on" href="{{ url_for('payment.screen') }}">Cashier</a>
+    {% elif role == 'Manager' %}
+      <a class="{{ 'on' if ep.startswith('menu.') }}" href="{{ url_for('menu.manage') }}">Menu items</a>
+      <a class="{{ 'on' if ep in ('tables.manage',) }}" href="{{ url_for('tables.manage') }}">Tables</a>
+      <a class="{{ 'on' if ep.startswith('payment.') }}" href="{{ url_for('payment.reports') }}">Reports</a>
+    {% endif %}
+  </nav>
+  {% endif %}
+  <main>
+    {% block flashes %}
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash {{ category }}">{{ message }}</div>
+        {% endfor %}
+      {% endwith %}
+    {% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

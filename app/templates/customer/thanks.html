@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}Order sent{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <h2>Order sent</h2>
+  <p>Your order <strong>#{{ order_id }}</strong> for table {{ table_code }} has been sent. The waitstaff will confirm it shortly.</p>
+  <a class="btn primary" href="{{ url_for('customer.order_page', table_code=table_code) }}">Order more dishes</a>
+</section>
+{% endblock %}

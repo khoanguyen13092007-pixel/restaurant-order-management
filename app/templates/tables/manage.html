@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}Tables{% endblock %}
+{% block content %}
+<div class="two-col wide-left">
+  <section class="panel flat">
+    <div class="toolbar"><a class="btn primary" href="{{ url_for('tables.manage', new=1) }}">+ Add table</a></div>
+    <table class="grid-table">
+      <thead><tr><th>Table code</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for t in tables %}
+        <tr>
+          <td>{{ t.code }}</td><td>{{ t.status|vi }}</td>
+          <td class="actions">
+            <a href="{{ url_for('tables.manage', edit=t.table_id) }}">[Edit]</a>
+            {% if t.status == 'available' %}
+              <form method="post" action="{{ url_for('tables.delete', table_id=t.table_id) }}" class="inline" onsubmit="return confirm('Delete this table?')">
+                {{ csrf_field() }}<button type="submit" class="linkbtn">[Delete]</button>
+              </form>
+            {% else %}(cannot delete){% endif %}
+          </td>
+        </tr>
+      {% else %}<tr><td colspan="3" class="muted">No tables yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+    <p class="note">A table that is currently occupied cannot be deleted.</p>
+  </section>
+
+  <section class="panel">
+    <h2>Add / edit table</h2>
+    <form method="post" action="{{ url_for('tables.save') }}">
+      {{ csrf_field() }}
+      <input type="hidden" name="table_id" value="{{ edit.table_id if edit else '' }}">
+      <label>Table code <input type="text" name="code" value="{{ edit.code if edit else '' }}" placeholder="e.g. T11" maxlength="20" required></label>
+      <div class="btnrow">
+        <button type="submit" class="primary">Save</button>
+        <a class="btn" href="{{ url_for('tables.manage') }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

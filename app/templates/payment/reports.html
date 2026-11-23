@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Reports{% endblock %}
+{% block content %}
+<form method="get" class="reportbar">
+  {% for key, label in (('day', 'Day'), ('week', 'Week'), ('month', 'Month')) %}
+    <button type="submit" name="period" value="{{ key }}" class="chip {{ 'on' if period == key }}">{{ label }}</button>
+  {% endfor %}
+  <label class="inline-label">From <input type="date" name="start" value="{{ revenue.start }}"></label>
+  <label class="inline-label">To <input type="date" name="end" value="{{ revenue.end }}"></label>
+  <button type="submit" name="period" value="{{ period }}" class="primary">Apply</button>
+</form>
+
+<div class="two-col">
+  <div>
+    <div class="kpis">
+      <div class="panel kpi"><span>Total revenue</span><strong>{{ revenue.total_revenue|money }} VND</strong></div>
+      <div class="panel kpi"><span>Orders paid</span><strong>{{ revenue.total_payments }}</strong></div>
+    </div>
+    <section class="panel">
+      <h2>Revenue per {{ period }}</h2>
+      {% set peak = (revenue.rows|map(attribute='revenue')|list|max) if revenue.rows else 0 %}
+      {% if revenue.rows %}
+      <div class="chart">
+        {% for r in revenue.rows %}
+          <div class="col" title="{{ r.period }}: {{ r.revenue|money }} VND">
+            <div class="bar" style="height: {{ (r.revenue / peak * 100)|round|int if peak else 0 }}%"></div>
+            <span>{{ r.period }}</span>
+          </div>
+        {% endfor %}
+      </div>
+      {% else %}<p class="muted">No revenue in this period.</p>{% endif %}
+    </section>
+  </div>
+  <section class="panel">
+    <h2>Best-selling items</h2>
+    <table class="grid-table">
+      <thead><tr><th>Rank</th><th>Item</th><th class="num">Sold</th></tr></thead>
+      <tbody>
+      {% for b in best %}
+        <tr><td>{{ loop.index }}</td><td>{{ b.name }}</td><td class="num">{{ b.quantity }}</td></tr>
+      {% else %}<tr><td colspan="3" class="muted">No data yet.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+</div>
+{% endblock %}

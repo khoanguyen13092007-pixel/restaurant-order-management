@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Menu items{% endblock %}
+{% block content %}
+<div class="two-col wide-left">
+  <section class="panel flat">
+    <div class="toolbar">
+      <a class="btn primary" href="{{ url_for('menu.manage', new=1) }}">+ Add item</a>
+      <a class="btn" href="{{ url_for('menu.categories') }}">Manage categories</a>
+      <form method="get" class="searchbar small"><input type="text" name="q" value="{{ q }}" placeholder="Search..."></form>
+    </div>
+    <table class="grid-table">
+      <thead><tr><th>Name</th><th>Category</th><th class="num">Price</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+      {% for i in items %}
+        <tr>
+          <td>{{ i.name }}</td><td>{{ i.category_name }}</td><td class="num">{{ i.price|money }}</td>
+          <td>{{ 'Available' if i.is_available else 'Sold out' }}</td>
+          <td class="actions">
+            <a href="{{ url_for('menu.manage', edit=i.menu_item_id) }}">[Edit]</a>
+            <form method="post" action="{{ url_for('menu.item_delete', item_id=i.menu_item_id) }}" class="inline" onsubmit="return confirm('Delete this dish?')">
+              {{ csrf_field() }}<button type="submit" class="linkbtn">[Delete]</button>
+            </form>
+          </td>
+        </tr>
+      {% else %}<tr><td colspan="5" class="muted">No dishes found.</td></tr>{% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Add / edit item</h2>
+    <form method="post" action="{{ url_for('menu.item_edit', item_id=edit.menu_item_id) if edit else url_for('menu.item_new') }}">
+      {{ csrf_field() }}
+      <label>Name <input type="text" name="name" value="{{ edit.name if edit else '' }}" placeholder="Dish name" required></label>
+      <label>Category
+        <select name="category_id" required>
+          {% for c in categories %}<option value="{{ c.category_id }}" {{ 'selected' if edit and edit.category_id == c.category_id }}>{{ c.name }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>Price <input type="number" name="price" min="0" step="1000" value="{{ edit.price|int if edit else '' }}" placeholder="0" required></label>
+      <label>Description <input type="text" name="description" value="{{ edit.description or '' if edit else '' }}" placeholder="Short description"></label>
+      <p class="label">Availability</p>
+      <div class="chips">
+        <input type="radio" name="available" id="av1" value="1" {{ 'checked' if not edit or edit.is_available }}><label class="chip" for="av1">Available</label>
+        <input type="radio" name="available" id="av0" value="0" {{ 'checked' if edit and not edit.is_available }}><label class="chip" for="av0">Sold out</label>
+      </div>
+      <div class="btnrow">
+        <button type="submit" class="primary">Save</button>
+        <a class="btn" href="{{ url_for('menu.manage') }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+</div>
+{% endblock %}

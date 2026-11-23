@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Kitchen{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="15">{% endblock %}
+{% block content %}
+<div class="chips">
+  {% for key, label in (('', 'All'), ('received', 'Received'), ('cooking', 'Cooking'), ('done', 'Done')) %}
+    <a class="chip {{ 'on' if current == key }}" href="{{ url_for('kitchen.board', status=key) if key else url_for('kitchen.board') }}">{{ label }}</a>
+  {% endfor %}
+</div>
+<section class="panel flat">
+  <table class="grid-table">
+    <thead><tr><th>Item</th><th class="num">Qty</th><th>Table</th><th>Note</th><th>Received</th><th>Status</th><th>Action</th></tr></thead>
+    <tbody>
+    {% for i in items %}
+      <tr>
+        <td>{{ i.item_name }}</td><td class="num">{{ i.quantity }}</td><td>{{ i.table_codes or '-' }}</td>
+        <td>{{ i.note or '—' }}</td><td>{{ i.ticket_created[11:16] }}</td><td>{{ i.status|vi }}</td>
+        <td>
+          {% if i.status in ('pending', 'preparing') %}
+          <form method="post" action="{{ url_for('kitchen.update_status', item_id=i.order_item_id) }}" class="inline">
+            {{ csrf_field() }}<input type="hidden" name="filter" value="{{ current }}">
+            <input type="hidden" name="status" value="{{ 'preparing' if i.status == 'pending' else 'ready' }}">
+            <button type="submit" class="linkbtn">[{{ 'Start cooking' if i.status == 'pending' else 'Mark done' }}]</button>
+          </form>
+          {% else %}&mdash;{% endif %}
+        </td>
+      </tr>
+    {% else %}<tr><td colspan="7" class="muted">No items to show.</td></tr>{% endfor %}
+    </tbody>
+  </table>
+</section>
+<p class="note">Items are listed in the order they were received. Marking an item Done sends a notification to the waitstaff. This page refreshes every 15 seconds.</p>
+{% endblock %}
