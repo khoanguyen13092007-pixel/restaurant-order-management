@@ -137,3 +137,4 @@ def create():
 def delete(table_id):
     attempt(lambda: TableService().delete_table(table_id), "Table deleted.")
     return redirect(url_for("tables.manage"))
+    
