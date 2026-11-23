@@ -117,3 +117,4 @@ class MenuService:
         if self.items.is_referenced(menu_item_id):
             raise ServiceError("This dish appears in orders and cannot be deleted. Mark it as sold out instead.")
         self.items.delete(menu_item_id)
+        
