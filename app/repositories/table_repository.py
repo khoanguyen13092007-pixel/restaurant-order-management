@@ -62,3 +62,4 @@ class OrderTableRepository:  # NV2 - bảng nối ORDER_TABLE (khoá chính ghé
             'SELECT ?, table_id FROM "ORDER_TABLE" WHERE order_id = ?', (to_order, from_order))
         db.execute('DELETE FROM "ORDER_TABLE" WHERE order_id = ?', (from_order,))
         db.commit()
+        
