@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Tables &amp; Orders{% endblock %}
+{% block head %}<meta http-equiv="refresh" content="30">{% endblock %}
+{% macro item_status(i) %}{% if i.status == 'pending' and not i.ticket_id %}Not sent{% else %}{{ i.status|vi }}{% endif %}{% endmacro %}
+{% block content %}
+{% if notification and session.role == 'Waitstaff' %}
+<div class="banner">
+  <span>Table {{ notification.table_codes or '-' }}: {{ notification.item_name }} is ready to serve.{% if more_ready %} (+{{ more_ready }} more){% endif %}</span>
+  <form method="post" action="{{ url_for('kitchen.served', item_id=notification.order_item_id) }}">
+    {{ csrf_field() }}<input type="hidden" name="next" value="{{ request.full_path.rstrip('?') }}">
+    <button type="submit">Dismiss</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="two-col">
+  <section class="panel flat">
+    <div class="tables-head">
+      <h2>Tables</h2>
+      <span class="legend"><span class="tag available">Available</span> <span class="tag occupied">Occupied</span></span>
+    </div>
+    <div class="tgrid">
+      {% for c in cards %}
+        <a class="tcard {{ c.status }} {{ 'target' if c.is_target }} {{ 'mine' if c.in_order }}" href="{{ c.href }}">
+          <strong>Table {{ c.code }}</strong>
+          <span>{{ c.status|vi }}</span>
+          <span>{% if c.active_order_id %}Order #{{ c.active_order_id }}{% else %}&mdash;{% endif %}</span>
+        </a>
+      {% endfor %}
+    </div>
+    <p class="selected">Selected: {% if target %}Table {{ target.code }}{% else %}&mdash;{% endif %}
+      {% if order_id or target %}&nbsp;<a href="{{ url_for('tables.screen') }}">Clear selection</a>{% endif %}</p>
+    <div class="btnrow">
+      {% for label, endpoint, cls in (('Assign order to table', 'tables.assign', 'primary'), ('Move order', 'tables.move', ''), ('Merge tables', 'tables.merge', '')) %}
+        <form method="post" action="{{ url_for(endpoint) }}">
+          {{ csrf_field() }}
+          <input type="hidden" name="order_id" value="{{ order_id or '' }}">
+          <input type="hidden" name="table_id" value="{{ target.table_id if target else '' }}">
+          <button type="submit" class="{{ cls }}" {{ 'disabled' if not (order_id and target) }}>{{ label }}</button>
+        </form>
+      {% endfor %}
+    </div>
+    <p class="note">Click an occupied table to see its order. Then click another table and use Assign (order without a table), Move (to a free table) or Merge (a free table, or a table with another order).</p>
+    <p class="note">Rule: an item can be edited or cancelled only while its status is Received. Once the kitchen starts cooking, the actions are locked.</p>
+  </section>
+
+  <section class="panel">
+    {% if selected %}
+      {% set o = selected.order %}
+      <h2>Order #{{ o.order_id }} &ndash; Table {{ selected.tables|map(attribute='code')|join(', ') or '—' }}</h2>
+      <p>Status: {{ o.status|vi }}{% if o.note %} &middot; Note: {{ o.note }}{% endif %}</p>
+      <table class="grid-table">
+        <thead><tr><th>Item</th><th class="num">Qty</th><th>Status</th><th>Actions</th></tr></thead>
+        <tbody>
+        {% for i in selected['items'] if i.status != 'cancelled' %}
+          <tr>
+            <td>{{ i.item_name }}{% if i.note %}<br><small class="muted">{{ i.note }}</small>{% endif %}</td>
+            <td class="num">{{ i.quantity }}</td>
+            <td>{{ item_status(i) }}</td>
+            <td class="actions">
+              {% if i.can_modify %}
+                <details class="edit"><summary>[Edit]</summary>
+                  <form method="post" action="{{ url_for('orders.item_quantity', item_id=i.order_item_id) }}">
+                    {{ csrf_field() }}<input type="hidden" name="order_id" value="{{ o.order_id }}">
+                    <input type="number" name="quantity" value="{{ i.quantity }}" min="1" max="50" class="qty">
+                    <button type="submit" class="primary small">Save</button>
+                  </form>
+                </details>
+                <form method="post" action="{{ url_for('orders.item_cancel', item_id=i.order_item_id) }}" class="inline">
+                  {{ csrf_field() }}<input type="hidden" name="order_id" value="{{ o.order_id }}">
+                  <button type="submit" class="linkbtn">[Cancel]</button>
+                </form>
+              {% elif i.status == 'preparing' %}Locked{% else %}&mdash;{% endif %}
+            </td>
+          </tr>
+        {% else %}<tr><td colspan="4" class="muted">This order has no dishes.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+      {% if o.status in ('draft', 'confirmed') %}
+      <div class="btnrow">
+        {% if session.role == 'Waitstaff' and selected.tables %}
+          <a class="btn primary" href="{{ url_for('orders.new', table=selected.tables[0].code) }}">+ Add item</a>
+        {% endif %}
+        {% if selected.unsent %}
+          <form method="post" action="{{ url_for('orders.confirm', order_id=o.order_id) }}">
+            {{ csrf_field() }}<button type="submit" class="primary">Confirm order &amp; send to kitchen ({{ selected.unsent }})</button>
+          </form>
+        {% endif %}
+        <form method="post" action="{{ url_for('orders.cancel', order_id=o.order_id) }}" onsubmit="return confirm('Cancel this order?')">
+          {{ csrf_field() }}<button type="submit">Cancel order</button>
+        </form>
+      </div>
+      {% endif %}
+    {% else %}
+      <h2>Order</h2>
+      <p class="muted">Select an occupied table to see its order.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}

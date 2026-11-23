@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Invoice #{{ payment.payment_id }}{% endblock %}
+{% block content %}
+<section class="panel invoice">
+  <h2>INVOICE #{{ payment.payment_id }}</h2>
+  <p>Order #{{ order.order_id }} &middot; Table: {{ tables|map(attribute='code')|join(', ') or '-' }}<br>
+     Paid at {{ payment.paid_at }} &middot; Cashier: {{ cashier_name }} &middot; {{ payment.method|vi }}</p>
+  <table class="grid-table">
+    <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Unit price</th><th class="num">Amount</th></tr></thead>
+    <tbody>
+    {% for i in items %}
+      <tr><td>{{ i.item_name }}</td><td class="num">{{ i.quantity }}</td><td class="num">{{ i.unit_price|money }}</td><td class="num">{{ (i.quantity * i.unit_price)|money }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <div class="billrow"><span>Subtotal</span><span>{{ order.subtotal|money }} VND</span></div>
+  <div class="billrow"><span>Discount</span><span>{{ order.discount_amount|money }} VND</span></div>
+  <div class="billrow"><span>Tax</span><span>{{ order.tax_amount|money }} VND</span></div>
+  <div class="billrow total"><span>Total</span><span>{{ payment.amount|money }} VND</span></div>
+  <p class="center">Thank you!</p>
+  <div class="btnrow no-print">
+    <button type="button" class="primary" onclick="window.print()">Print invoice</button>
+    <a class="btn" href="{{ url_for('payment.screen') }}">Back</a>
+  </div>
+</section>
+{% endblock %}

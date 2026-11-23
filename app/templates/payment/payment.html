@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Cashier{% endblock %}
+{% block content %}
+<form method="get" class="findrow">
+  <label class="inline-label">Table
+    <select name="table">
+      <option value="">Select table</option>
+      {% for t in tables %}<option value="{{ t.table_id }}" {{ 'selected' if t.table_id == table_id }}>{{ t.code }}</option>{% endfor %}
+    </select>
+  </label>
+  <button type="submit">Find order</button>
+</form>
+
+{% if order %}
+{% set o = order.order %}
+<div class="two-col">
+  <section class="panel">
+    <h2>Order #{{ o.order_id }}</h2>
+    <table class="grid-table">
+      <thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Amount</th></tr></thead>
+      <tbody>
+      {% for i in order['items'] if i.status != 'cancelled' %}
+        <tr><td>{{ i.item_name }}</td><td class="num">{{ i.quantity }}</td><td class="num">{{ (i.quantity * i.unit_price)|money }}</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </section>
+
+  <section class="panel">
+    <h2>Bill</h2>
+    <form method="post" action="{{ url_for('payment.pay', order_id=o.order_id) }}" id="bill"
+          data-subtotal="{{ totals.subtotal|int }}" data-rate="{{ config.TAX_RATE }}">
+      {{ csrf_field() }}
+      <input type="hidden" name="table_id" value="{{ table_id or '' }}">
+      <div class="billrow"><span>Subtotal</span><span><span id="b-subtotal">{{ totals.subtotal|money }}</span> VND</span></div>
+      <div class="billrow"><span>Discount</span>
+        <span>{% if paid %}{{ totals.discount_amount|money }}{% else %}<input type="number" name="discount" id="discount" min="0" step="1000" value="{{ totals.discount_amount|int }}" class="discount">{% endif %} VND</span></div>
+      <div class="billrow"><span>Tax ({{ '%g'|format(config.TAX_RATE * 100) }}%)</span><span><span id="b-tax">{{ totals.tax_amount|money }}</span> VND</span></div>
+      <div class="billrow total"><span>Total</span><span><span id="b-total">{{ totals.total_amount|money }}</span> VND</span></div>
+      <p class="label">Payment method</p>
+      <div class="chips methods">
+        {% for m in methods %}
+          <input type="radio" name="method" id="m-{{ m }}" value="{{ m }}" {{ 'checked' if (paid and paid.method == m) or (not paid and loop.first) }} {{ 'disabled' if paid }}>
+          <label class="chip" for="m-{{ m }}">{{ m|vi }}</label>
+        {% endfor %}
+      </div>
+      <div class="btnrow">
+        <button type="submit" class="primary" {{ 'disabled' if paid }}>Confirm payment</button>
+        {% if paid %}
+          <a class="btn" href="{{ url_for('payment.invoice', payment_id=paid.payment_id) }}">Print invoice</a>
+        {% else %}
+          <button type="button" disabled>Print invoice</button>
+        {% endif %}
+      </div>
+    </form>
+  </section>
+</div>
+{% endif %}
+<p class="note">After payment succeeds: the order becomes Paid, the table is set back to Available, and the invoice can be printed.</p>
+{% if order and not paid %}
+<script>
+(function () {
+  var bill = document.getElementById('bill'), disc = document.getElementById('discount');
+  var subtotal = +bill.dataset.subtotal, rate = +bill.dataset.rate;
+  function fmt(n) { return Math.round(n).toLocaleString('en-US'); }
+  function update() {
+    var d = Math.min(Math.max(+disc.value || 0, 0), subtotal);
+    var tax = Math.floor((subtotal - d) * rate + 0.5);
+    document.getElementById('b-tax').textContent = fmt(tax);
+    document.getElementById('b-total').textContent = fmt(subtotal - d + tax);
+  }
+  disc.addEventListener('input', update);
+})();
+</script>
+{% endif %}
+{% endblock %}

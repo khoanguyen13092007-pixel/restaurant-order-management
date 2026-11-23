@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Manage categories{% endblock %}
+{% block content %}
+<section class="panel narrow">
+  <h2>Manage categories</h2>
+  <table class="grid-table">
+    <tbody>
+    {% for c in categories %}
+      <tr>
+        <td>
+          <form method="post" action="{{ url_for('menu.category_rename', category_id=c.category_id) }}" class="inline">
+            {{ csrf_field() }}<input type="text" name="name" value="{{ c.name }}" required>
+            <button type="submit" class="small">Rename</button>
+          </form>
+        </td>
+        <td>
+          <form method="post" action="{{ url_for('menu.category_delete', category_id=c.category_id) }}" class="inline" onsubmit="return confirm('Delete this category?')">
+            {{ csrf_field() }}<button type="submit" class="linkbtn">[Delete]</button>
+          </form>
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  <form method="post" action="{{ url_for('menu.category_new') }}" class="inline">
+    {{ csrf_field() }}<input type="text" name="name" placeholder="New category name" required>
+    <button type="submit" class="primary">Add category</button>
+  </form>
+  <p><a class="btn" href="{{ url_for('menu.manage') }}">Back to menu items</a></p>
+</section>
+{% endblock %}
