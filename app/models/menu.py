@@ -59,3 +59,4 @@ class RestaurantTable:
         from app.services.table_service import TableService
         TableService().set_status(self.table_id, "available")
         self.status = "available"
+        
